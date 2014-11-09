@@ -1,0 +1,14 @@
+{
+    "name":"AudioVisualizer",
+    "description":"audo visualizer",
+    "launch_path": "/index.html",
+    "developer": {
+        "name": "xianfeng",
+        "url": "https://github.com/openflint"
+    },
+    "default_locale": "en",
+    "type": "privileged",
+    "permissions": {
+        "systemXHR": { "description": "Required to make Ajax Calls over the Network" }
+    }
+}
