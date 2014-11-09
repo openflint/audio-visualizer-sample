@@ -8,6 +8,7 @@
     var audio_url;
     var deviceIp;
     var appUrl = "http://openflint.github.io/audio-visualizer-sample/receiver_app/index.html";
+    var defaultAudioUrl = "http://openflint.github.io/audio-visualizer-sample/receiver_app/audio/EMDCR.ogg";
     var deviceIpInput = document.getElementById("device-ip");
     var musicUrlInput = document.getElementById("music-url");
 
@@ -18,7 +19,7 @@
         playMusic.onclick = function() {
             console.log('playMusic button onclick');
             console.log("IP: " + deviceIpInput.value + "; URL: " + musicUrlInput.value);
-            if (deviceIpInput.value != "" && musicUrlInput.value != "") {
+            if (deviceIpInput.value != "") {
                 var patrn = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
                 if (!patrn.exec(deviceIpInput.value)) {
                     return;
@@ -30,15 +31,17 @@
                     messageChannel.on("message", function(jsonObject) {
                         console.log('messageChannel' + JSON.stringify(jsonObject));
                     });
-                    messageChannel.send(JSON.stringify({
-                        "type": "PLAY",
-                        "url": musicUrlInput.value
-                    }));
-
-                    //load default music
-                    // messageChannel.send(JSON.stringify({
-                    //     "type": "PLAY"
-                    // }));
+                    if (musicUrlInput.value != "") {
+                        messageChannel.send(JSON.stringify({
+                            "type": "PLAY",
+                            "url": musicUrlInput.value
+                        }));
+                    } else {
+                        messageChannel.send(JSON.stringify({
+                            "type": "PLAY",
+                            "url": defaultAudioUrl
+                        }));
+                    }
 
                 });
                 senderDaemon.openApp(appUrl, -1, true);
