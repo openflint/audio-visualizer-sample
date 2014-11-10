@@ -7,7 +7,6 @@
         "url": "https://github.com/openflint"
     },
     "default_locale": "en",
-    "type": "privileged",
     "permissions": {
         "systemXHR": { "description": "Required to make Ajax Calls over the Network" }
     }

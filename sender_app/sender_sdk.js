@@ -8,35 +8,28 @@ var MessageChannel = function(wsURL){
     var wsServer = wsURL;
     self.closeSignal = false;
 
-    console.info("-------------------------------------------> sender channel wsServer: ", wsServer);
     var ws = new WebSocket(wsServer);
     ws.onopen = function (evt) {
-        console.info("-------------------------------------> sender channel onopen");
         ("onopened" in self)&&(self.onopened());
     }; 
     ws.onclose = function (evt) { 
         if(self.closeSignal){
-            console.info("-------------------------------------> sender channel onclose");
         }else{
             setTimeout(function(){
                 ws = new WebSocket(wsServer);
-                console.info("-------------------------------------> sender channel reconnect");
             },50);
         }
     }; 
     ws.onmessage = function (evt) { 
-        console.info("-------------------------------------> sender channel onmessage evt.data : ", evt.data);
         if(evt.data){
             try{
                 var msg = JSON.parse(evt.data);
                 ("onmessage" in self)&&(msg)&&self.onmessage(msg);
             }catch(e){
-                console.info("----------------------------> sender channel mesage error");
             }
         }
     }; 
     ws.onerror = function (evt) {
-        console.info("-------------------------------------> sender channel onerror");
     };
 
     /*
@@ -69,7 +62,7 @@ var MessageChannel = function(wsURL){
 /*
 * Receiver Application state manager. This Class wrapper DIAL protocol.
 **/
-var SenderDaemon = function(deviceIp){
+var SenderDaemon = function(deviceIp, appid){
     var self = this;
     var appUrl = "",
         maxInactive = -1;
@@ -81,14 +74,12 @@ var SenderDaemon = function(deviceIp){
     self.appState = null;
     self.appHref = null;
     self.additionalDatas = {};
-
     var wsServer = "ws://"+deviceIp+":9431/receiver/"+appid,
         ws = null,
         sender = {
             "count":0,
             "list":{}
         };
-
     self.simpleHttpRequest = function(method, headers, url, data, callback){
         console.info("url: ", url);
         var xhr = new XMLHttpRequest({mozSystem: true});
@@ -101,7 +92,6 @@ var SenderDaemon = function(deviceIp){
         xhr.onreadystatechange = function() {
             if(xhr.readyState==4){
                 if(xhr.status==200||xhr.status==201){
-                    // console.info("--------------------------------->flingd resp: ", xhr.responseText);
                     if(callback){
                         callback(xhr.responseText);
                     }

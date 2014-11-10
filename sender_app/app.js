@@ -1,8 +1,7 @@
 "use strict";
 (function() {
 
-    //TODO 
-    //    var appid = "~browser";
+    var appid = "~browser";
 
     var senderDaemon
     var audio_url;
@@ -25,7 +24,7 @@
                     return;
                 }
                 deviceIp = deviceIpInput.value;
-                senderDaemon = new SenderDaemon(deviceIp);
+                senderDaemon = new SenderDaemon(deviceIp, appid);
                 senderDaemon.on("appopened", function(messageChannel) {
                     console.log("senderDaemon appopened");
                     messageChannel.on("message", function(jsonObject) {
