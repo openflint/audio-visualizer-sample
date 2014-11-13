@@ -28,7 +28,7 @@ $(document).ready(function() {
 
 function init() {
   //***********start flint************//
-  var receiverDaemon = new ReceiverDaemon("~browser");
+  var receiverDaemon = new ReceiverDaemon("~audiovisualizer");
   var channel = receiverDaemon.createMessageChannel("ws");
   receiverDaemon.open();
 

@@ -1,7 +1,7 @@
 "use strict";
 (function() {
 
-    var appid = "~browser";
+    var appid = "~audiovisualizer";
 
     var senderDaemon
     var audio_url;

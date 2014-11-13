@@ -17,7 +17,7 @@ function guid(){
  * Maintain Communication with Fling Daemon.
  * How to use:
  * //1. Create Receiver Daemon Instance. parameter is application's id, this id must be same as your sender appid
- * var receiverDaemon = new ReceiverDaemon("~browser");
+ * var receiverDaemon = new ReceiverDaemon("~APPID");
  * //2. Create MessageChannel Obejct
  * var channel = receiverDaemon.createMessageChannel("ws");
  * //3. open receiver daemon
