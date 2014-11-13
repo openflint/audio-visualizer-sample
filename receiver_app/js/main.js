@@ -8,44 +8,50 @@
 */
 
 
-var mouseX = 0, mouseY = 0, windowHalfX = window.innerWidth / 2, windowHalfY = window.innerHeight / 2, camera, scene, renderer, material, container;
-var source;
+var windowHalfX = window.innerWidth / 2, windowHalfY = window.innerHeight / 2, camera, scene, renderer, material, container;
 var analyser;
-var buffer;
 var audioBuffer;
-var dropArea;
 var audioContext;
 var source;
-var analyser;
-var xhr;
+var canvas;
 var started = false;
-
+var visRenderer;
 var perlin = new ImprovedNoise();
 var noisePos = Math.random()*100;
+var requestId;
+var effect = null;
 $(document).ready(function() {
-  init();
+    //***********start flint************//
+    var receiverDaemon = new ReceiverDaemon("~audio-visualizer");
+    var channel = receiverDaemon.createMessageChannel("ws");
+    receiverDaemon.open();
+
+    channel.on("message", function(senderId, messageType, message){
+        console.log('visualizer message: '+ JSON.stringify(message));
+
+
+        if (message.data && JSON.parse(message.data).type && JSON.parse(message.data).type == 'PLAY') {
+            var audioURL = JSON.parse(message.data).url ;
+            effect = JSON.parse(message.data).effect;
+            if (audioURL) {
+                //load specify audio
+                loadAudio(audioURL);
+            } else {
+                //load default audio
+                loadAudio("audio/EMDCR.ogg");
+            }
+        } else if (message.data && JSON.parse(message.data).type && JSON.parse(message.data).type == 'STOP'){
+            stopMusic();
+        }
+
+
+    });
+    //***********end flint************//
+
+    init();
 });
 
 function init() {
-  //***********start flint************//
-  var receiverDaemon = new ReceiverDaemon("~audiovisualizer");
-  var channel = receiverDaemon.createMessageChannel("ws");
-  receiverDaemon.open();
-
-  channel.on("message", function(senderId, messageType, message){
-    console.log('visualizer message: '+ JSON.stringify(message));
-    var audioURL = JSON.parse(message.data).url ;
-    if (audioURL) {
-        //load specify audio
-        loadAudio(audioURL);
-    } else {
-        //load default audio
-        loadAudio("audio/EMDCR.ogg");
-    }
-    
-  });
-  //***********end flint************//
-
 
   //check for WebGL
 	if(!hasWebGL()){
@@ -62,25 +68,6 @@ function init() {
 		$("#prompt").html("Sorry!<br>This browser does not support the Web Audio API. <br>Please use Chrome, Safari or Firefox.");
 		return;
 	}
-
-	//$('#prompt').html('drop mp3 here or <a id="loadSample">load sample mp3</a>');
-
-	//fix iOS sound playback
-	//from http://paulbakaus.com/tutorials/html5/web-audio-on-ios/
-	window.addEventListener('touchstart', function() {
-
-		// create empty buffer
-		var buffer = audioContext.createBuffer(1, 1, 22050);
-		var source = audioContext.createBufferSource();
-		source.buffer = buffer;
-
-		// connect to output (your speakers)
-		source.connect(audioContext.destination);
-
-		// play the file
-		source.noteOn(0);
-
-	}, false);
 
 	//init audio
 	analyser = audioContext.createAnalyser();
@@ -100,38 +87,20 @@ function init() {
 	});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 
-	container.appendChild(renderer.domElement);
-
-	// stop the user getting a text cursor
-	document.onselectStart = function() {
-		return false;
-	};
-
-	//add stats
-	stats = new Stats();
-	stats.domElement.style.position = 'absolute';
-	stats.domElement.style.top = '0px';
-	container.appendChild(stats.domElement);
-
-	//init listeners
-	$("#loadSample").click(loadAudio("audio/EMDCR.ogg"));
-	$(document).mousemove(onDocumentMouseMove);
-	
-	container.addEventListener( 'touchstart', onDocumentTouchStart, false );
-	container.addEventListener( 'touchmove', onDocumentTouchMove, false );
+    visRenderer = container.appendChild(renderer.domElement);
 
 	$(window).resize(onWindowResize);
-	document.addEventListener('drop', onMP3Drop, false);
-	document.addEventListener('dragover', onDocumentDragOver, false);
 
 	onWindowResize(null);
-
-	LoopVisualizer.init();
 }
 
 function loadAudio(audioURL) {
+    $('#prompt').show();
 	$('#prompt').text("loading...");
   console.log('audioURL: '+audioURL);
+    if (started) {
+        stopMusic();
+    }
 	// Load asynchronously
   var request =new XMLHttpRequest({mozSystem: true, mozAnon: true, mozBackgroundRequest: true})
 	request.open("GET", audioURL, true);
@@ -149,16 +118,6 @@ function loadAudio(audioURL) {
 	request.send();
 }
 
-function onDroppedMP3Loaded(data) {
-	audioContext.decodeAudioData(data, function(buffer) {
-		audioBuffer = buffer;
-		startSound();
-	}, function(e) {
-		$('#prompt').text("cannot decode mp3");
-		console.log(e);
-	});
-}
-
 function startSound() {
 
 	if (source){
@@ -167,35 +126,62 @@ function startSound() {
 	}
 
 	// Connect audio processing graph
-	source = audioContext.createBufferSource();	
+	source = audioContext.createBufferSource();
 	source.connect(audioContext.destination);
 	source.connect(analyser);
 
 	source.buffer = audioBuffer;
 	source.loop = true;
 	source.start(0.0);
-	startViz();
+    //TODO
+
+    if (effect == 'wave') {
+        LoopVisualizer.init();
+        startViz();
+    } else if (effect == 'particles'){
+        Particles.init();
+        startPar();
+    }
 }
 
-function onDocumentMouseMove(event) {
-	mouseX = (event.clientX - windowHalfX);
-	mouseY = (event.clientY - windowHalfY);
+function stopMusic() {
+    console.log('stop music');
+    if (source){
+        source.stop(0.0);
+        source.disconnect();
+    }
+
+    renderer.clear();
+
+    //TODO  need reinit ????
+    container.removeChild(renderer.domElement);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000000);
+    camera.position.z = 2000;
+    renderer = new THREE.WebGLRenderer({
+        antialias : false,
+        sortObjects : false
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    visRenderer = container.appendChild(renderer.domElement);
+
+    started = false;
+    cancelAnimationFrame(requestId);
+
 }
 
-function onDocumentTouchStart( event ) {
-	if ( event.touches.length == 1 ) {
-		event.preventDefault();
-		mouseX = event.touches[ 0 ].pageX - windowHalfX;
-		mouseY = event.touches[ 0 ].pageY - windowHalfY;
-	}
+function animatePar() {
+    requestId = requestAnimationFrame(animatePar);
+    Particles.render();
+    renderer.render(scene, camera);
 }
 
-function onDocumentTouchMove( event ) {
-	if ( event.touches.length == 1 ) {
-		event.preventDefault();
-		mouseX = event.touches[ 0 ].pageX - windowHalfX;
-		mouseY = event.touches[ 0 ].pageY - windowHalfY;
-	}
+function startPar() {
+    console.log('startPar');
+    $('#prompt').hide();
+    if (!started){
+        started = true;
+        animatePar();
+    }
 }
 
 function onWindowResize(event) {
@@ -206,80 +192,27 @@ function onWindowResize(event) {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function animate() {
-	requestAnimationFrame(animate);
-	render();
-	stats.update();
-}
-
-function render() {
-
-	LoopVisualizer.update();
-
-	noisePos += 0.005;
-
-	if (LoopVisualizer.vizParams.autoTilt){
-		var rotRng = Math.PI /2;
-		LoopVisualizer.loopHolder.rotation.x = perlin.noise(noisePos,0,0) * rotRng;
-		LoopVisualizer.loopHolder.rotation.y = perlin.noise(noisePos ,100,0) * rotRng;
-
-	}else{
-		//mouse
-		var xrot = mouseX/window.innerWidth * Math.PI*2 + Math.PI;
-		var yrot = mouseY/window.innerHeight* Math.PI*2 + Math.PI;
-		LoopVisualizer.loopHolder.rotation.x += (-yrot - LoopVisualizer.loopHolder.rotation.x) * 0.3;
-		LoopVisualizer.loopHolder.rotation.y += (xrot - LoopVisualizer.loopHolder.rotation.y) * 0.3;
-	}
-
-	renderer.render(scene, camera);
-}
-
-$(window).mousewheel(function(event, delta) {
-	//set camera Z
-	camera.position.z -= delta * 50;
-});
-
-function onDocumentDragOver(evt) {
-//	$('#prompt').show();
-//	$('#prompt').text("drop MP3 here");
-	evt.stopPropagation();
-	evt.preventDefault();
-	return false;
-}
-
-function onMP3Drop(evt) {
-	evt.stopPropagation();
-	evt.preventDefault();
-
-	//clean up previous mp3
-	//if (source) source.disconnect();
-	//LoopVisualizer.remove();
-
-	$('#prompt').show();
-	$('#prompt').text("loading...");
-
-	var droppedFiles = evt.dataTransfer.files;
-	var reader = new FileReader();
-	reader.onload = function(fileEvent) {
-		var data = fileEvent.target.result;
-		onDroppedMP3Loaded(data);
-	};
-	reader.readAsArrayBuffer(droppedFiles[0]);
+function animateViz() {
+    requestId = requestAnimationFrame(animateViz);
+    LoopVisualizer.update();
+    renderer.render(scene, camera);
 }
 
 function startViz(){
+    console.info('startViz');
 	$('#prompt').hide();
 	//LoopVisualizer.start();
 	if (!started){
 		started = true;
-		animate();
+		animateViz();
 	}
 }
 
-function hasWebGL() { 
-	try { 
-		return !! window.WebGLRenderingContext && !! document.createElement( 'canvas' ).getContext( 'experimental-webgl' ); 
-	} catch( e ) { 
-		return false; 
+function hasWebGL() {
+	try {
+		return !! window.WebGLRenderingContext && !! document.createElement( 'canvas' ).getContext( 'experimental-webgl' );
+	} catch( e ) {
+		return false;
 	}
+
 }

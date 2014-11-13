@@ -9,7 +9,7 @@ var LoopVisualizer = (function() {
 	var rings = [];
 	var levels = [];
 	var colors = [];
-	var loopHolder = new THREE.Object3D();
+	var loopHolder;
 	var loopGeom;//one geom for all rings
 	var freqByteData;
 	var timeByteData;
@@ -25,6 +25,10 @@ var LoopVisualizer = (function() {
 
 
 	function init() {
+        rings = [];
+        levels = [];
+        colors = [];
+        loopHolder = new THREE.Object3D();
 
 		////////INIT audio in
 		freqByteData = new Uint8Array(analyser.frequencyBinCount);
@@ -63,13 +67,13 @@ var LoopVisualizer = (function() {
 		}
 
 		//Init DAT GUI control panel
-		var gui = new dat.GUI();			
-		gui.add(vizParams, 'gain', 0.1, 3).name("Gain");
-		gui.add(vizParams, 'separation', 0.001, 0.05).name("Separation").onChange(onParamsChange);
-		gui.add(vizParams, 'scale', 0.1, 8).name("Scale").onChange(onParamsChange);
-		gui.add(vizParams, 'zbounce', 0.01, 2).name("Z-Bounce");
-		gui.add(vizParams, 'autoTilt').name("Auto Tilt");
-		gui.close();
+//		var gui = new dat.GUI();
+//		gui.add(vizParams, 'gain', 0.1, 3).name("Gain");
+//		gui.add(vizParams, 'separation', 0.001, 0.05).name("Separation").onChange(onParamsChange);
+//		gui.add(vizParams, 'scale', 0.1, 8).name("Scale").onChange(onParamsChange);
+//		gui.add(vizParams, 'zbounce', 0.01, 2).name("Z-Bounce");
+//		gui.add(vizParams, 'autoTilt').name("Auto Tilt");
+//		gui.close();
 
 		onParamsChange();
 

@@ -7,15 +7,18 @@
     <body>
         <link href="style/buttons.css" rel="stylesheet" type="text/css">
         <link href="style/input_areas.css" rel="stylesheet" type="text/css">
-        <p>
+
+        <div id="input-container">
             <input id="device-ip" type="text" placeholder="Device IP">
             <input id="music-url" type="text" placeholder="http://openflint.github.io/audio-visualizer-sample/receiver_app/audio/EMDCR.ogg">
-            <button id="play-music" class="recommend">Play</button>
-            <button id="stop-music"class="danger">Stop</button>
-        </p>
+        </div>
 
+        <button id="play-music" class="recommend">Play</button>
+        <button id="stop-music"class="danger">Stop</button>
     </body>
+
 
     <script src="sender_sdk.js"></script>
     <script src="app.js"></script>
+
 </html>

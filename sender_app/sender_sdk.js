@@ -81,7 +81,7 @@ var SenderDaemon = function(deviceIp, appid){
             "list":{}
         };
     self.simpleHttpRequest = function(method, headers, url, data, callback){
-        console.info("url: ", url);
+    //    console.info("url: ", url);
         var xhr = new XMLHttpRequest({mozSystem: true});
         xhr.open(method, url, true);
         if(headers){

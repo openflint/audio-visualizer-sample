@@ -8,10 +8,38 @@
 </head>
 <body>
 
+<h1>Loop Waveform Visualizer</h1>
+    <div id="container"></div>
+    <div id="prompt"></div>
 
-	<h1>Loop Waveform Visualizer</h1>
-	
-	<div id="prompt"></div>
+<script type="x-shader/x-vertex" id="vertexshader">
+                uniform float amplitude;
+                attribute float displacement;
+                varying vec3 vNormal;
+                varying vec2 vUv;
+                void main() {
+                    vNormal = normal;
+                    vUv = ( 0.5 + amplitude ) * uv + vec2( amplitude );
+                    vec3 newPosition = position + amplitude * normal * vec3( displacement );
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+                }
+    </script>
+
+<script type="x-shader/x-fragment" id="fragmentshader">
+                varying vec3 vNormal;
+                varying vec2 vUv;
+                uniform vec3 color;
+                uniform sampler2D texture;
+                void main() {
+                    vec3 light = vec3( 0.5, 0.2, 1.0 );
+                    light = normalize( light );
+                    float dProd = dot( vNormal, light ) * 0.5 + 0.5;
+                    vec4 tcolor = texture2D( texture, vUv );
+                    vec4 gray = vec4( vec3( tcolor.r * 0.3 + tcolor.g * 0.59 + tcolor.b * 0.11 ), 1.0 );
+                    gl_FragColor = gray * vec4( vec3( dProd ) * vec3( color ), 1.0 );
+                }
+    </script>
+
 <!-- 
     <div id="info">Mouse to tilt. Mousewheel to zoom. Music by <a href="http://cubicroom.net/">Cubesato</a>. Built by <a href="http://www.twitter.com/felixturner">@felixturner</a> using Web Audio API and <a href="https://github.com/mrdoob/three.js/">Three.js</a>. 
     </div>
@@ -20,15 +48,15 @@
     <script src="http://openflint.github.io/flint-receiver-sdk/receiver.js"></script>
 	<script src="js/three.min.js"></script>
 	<script src="js/RequestAnimationFrame.js"></script>
-	<script src="js/Stats.js"></script>
 	<script src="js/jquery.min.js"></script>
 	<script src="js/jquery.mousewheel.js"></script>
 	<script src="js/ImprovedNoise.js"></script>
-	<script src='js/dat.gui.min.js'></script>
+	<!--<script src='js/dat.gui.min.js'></script>-->
 
 	<script src="js/ATUtil.js"></script>
 	<script src="js/main.js"></script>
 	<script src="js/visualizer.js"></script>
+    <script src="js/particles.js"></script>
 
 </body>
 </html>
