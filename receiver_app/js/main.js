@@ -22,17 +22,17 @@ var requestId;
 var effect = null;
 $(document).ready(function() {
     //***********start flint************//
-    var receiverDaemon = new ReceiverDaemon("~audio-visualizer");
-    var channel = receiverDaemon.createMessageChannel("ws");
-    receiverDaemon.open();
+    var receiverManager = new ReceiverManager("~audio-visualizer");
+    var channel = receiverManager.createMessageChannel();
+    receiverManager.open();
 
-    channel.on("message", function(senderId, messageType, message){
-        console.log('visualizer message: '+ JSON.stringify(message));
+    channel.on("message", function(senderId, data){
+        console.log('visualizer message: '+ data);
+        var message = JSON.parse(data);
 
-
-        if (message.data && JSON.parse(message.data).type && JSON.parse(message.data).type == 'PLAY') {
-            var audioURL = JSON.parse(message.data).url ;
-            effect = JSON.parse(message.data).effect;
+        if (message && message.type && message.type == 'PLAY') {
+            var audioURL = message.url ;
+            effect = message.effect;
             if (audioURL) {
                 //load specify audio
                 loadAudio(audioURL);
@@ -40,7 +40,7 @@ $(document).ready(function() {
                 //load default audio
                 loadAudio("audio/EMDCR.ogg");
             }
-        } else if (message.data && JSON.parse(message.data).type && JSON.parse(message.data).type == 'STOP'){
+        } else if (message && message.type && message.type == 'STOP'){
             stopMusic();
         }
 
