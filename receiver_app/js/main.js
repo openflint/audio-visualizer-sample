@@ -23,7 +23,7 @@ var effect = null;
 $(document).ready(function() {
     //***********start flint************//
     var receiverManager = new ReceiverManager("~audio-visualizer");
-    var channel = receiverManager.createMessageChannel();
+    var channel = receiverManager.createMessageChannel("audio-visualizer");
     receiverManager.open();
 
     channel.on("message", function(senderId, data){
