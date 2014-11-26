@@ -1,7 +1,7 @@
 {
     "name":"AudioVisualizer",
     "description":"audo visualizer",
-    "launch_path": "/index.html",
+    "launch_path": "index.html",
     "developer": {
         "name": "xianfeng",
         "url": "https://http://openflint.github.io/audio-visualizer-sample/sender_app/index.html"
